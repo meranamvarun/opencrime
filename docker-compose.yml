@@ -67,6 +67,41 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  crawler-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.crawler.tasks.celery_app worker --loglevel=info --concurrency=4 -Q crawler
+    environment:
+      DATABASE_URL: postgresql://opencrime:opencrime@db:5432/opencrime
+      REDIS_URL: redis://redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CRAWLER_PROXY_URLS: ${CRAWLER_PROXY_URLS:-}
+    volumes:
+      - ./backend:/app
+      - uploads:/tmp/opencrime/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  crawler-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.crawler.scheduler.celery_app beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://opencrime:opencrime@db:5432/opencrime
+      REDIS_URL: redis://redis:6379/0
+      CRAWLER_PROXY_URLS: ${CRAWLER_PROXY_URLS:-}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend

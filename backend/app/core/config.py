@@ -19,6 +19,12 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 
+    # Crawler settings
+    # Comma-separated proxy URLs: http://user:pass@host:port
+    CRAWLER_PROXY_URLS: str = ""
+    CAPTCHA_MAX_ATTEMPTS: int = 3
+    CRAWL_RATE_LIMIT_RPS: float = 1.0
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
